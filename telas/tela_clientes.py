@@ -99,7 +99,14 @@ class TelaClientes(tk.Toplevel):
         cursor.execute(sql, val)
         conexao.commit()
         conexao.close()
-        messagebox.showinfo("Sucesso", "Cliente adicionado com sucesso!")
+
+        messagebox.showinfo("Cadastrar", "Música cadastrada com sucesso!")
+        self.entrada_nome.delete(0, tk.END)
+        self.entrada_email.delete(0, tk.END)
+        self.entrada_telefone.delete(0, tk.END)
+        self.entrada_endereco.delete(0, tk.END)
+        self.entrada_cidade.delete(0, tk.END)
+        self.combo_estado.delete(0, tk.END)
     
     def deletar_cliente(self):
         conexao = mysql.connector.connect (
