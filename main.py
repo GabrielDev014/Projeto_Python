@@ -15,8 +15,9 @@ class App(tk.Tk):
         super().__init__()
 
         self.title("Sistema de Vendas - Python + MySQL")
-        self.geometry("800x600+200+50")
+        #self.geometry("800x600+200+50")
         self.configure(bg="#f8f9fa")
+        self.state("zoomed")
 
         self._criar_menu_bar()
 
