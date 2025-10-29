@@ -16,7 +16,7 @@ class App(tk.Tk):
 
         # Configuração da janela principal
         self.title("Sistema de Vendas - Python + MySQL")
-        self.geometry("800x600")
+        self.geometry("800x600+200+50")
         self.configure(bg="#f8f9fa")
 
         # Criação do menu superior
@@ -72,7 +72,7 @@ class App(tk.Tk):
         TelaProdutos(self)
 
     def abrir_vendas(self):
-        TelaVendas(self)
+        janela = TelaVendas(self)
 
     def abrir_relatorios(self):
         TelaRelatorios(self)
@@ -82,7 +82,6 @@ class App(tk.Tk):
 
     def abrir_graficos(self):
         TelaGraficos(self)
-
 
 if __name__ == "__main__":
     app = App()
