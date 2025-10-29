@@ -6,7 +6,7 @@ from conn.conexaoMySQL import conexao
 class TelaClientes(tk.Toplevel):
     def __init__(self, master=None):
         super().__init__(master)
-        self.title("Sistema de Clientes")
+        self.title("Cadastro de Clientes")
         self.geometry("500x500+350+100")
         self.transient(master)
         self.focus_force()

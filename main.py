@@ -14,15 +14,12 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        # Configuração da janela principal
         self.title("Sistema de Vendas - Python + MySQL")
         self.geometry("800x600+200+50")
         self.configure(bg="#f8f9fa")
 
-        # Criação do menu superior
         self._criar_menu_bar()
 
-        # Label inicial
         self.label_bemvindo = ttk.Label(
             self,
             text="Bem-vindo ao Sistema de Vendas",
@@ -31,40 +28,29 @@ class App(tk.Tk):
         )
         self.label_bemvindo.pack(expand=True)
 
-    # -------------------------
-    # MENU SUPERIOR
-    # -------------------------
     def _criar_menu_bar(self):
         menubar = tk.Menu(self)
 
-        # Menu Cadastro
         menu_cadastro = tk.Menu(menubar, tearoff=0)
         menu_cadastro.add_command(label="Clientes", command=self.abrir_clientes)
         menu_cadastro.add_command(label="Produtos", command=self.abrir_produtos)
         menubar.add_cascade(label="Cadastro", menu=menu_cadastro)
 
-        # Menu Vendas
         menu_vendas = tk.Menu(menubar, tearoff=0)
         menu_vendas.add_command(label="Novo Pedido", command=self.abrir_vendas)
         menubar.add_cascade(label="Vendas", menu=menu_vendas)
 
-        # Menu Relatórios
         menu_relatorios = tk.Menu(menubar, tearoff=0)
         menu_relatorios.add_command(label="Exportar PDF / Excel", command=self.abrir_relatorios)
         menu_relatorios.add_command(label="Exportar Gráficos", command=self.abrir_graficos)
         menubar.add_cascade(label="Relatórios", menu=menu_relatorios)
 
-        # Menu Insights IA
         menu_ia = tk.Menu(menubar, tearoff=0)
         menu_ia.add_command(label="Gerar Insights com IA", command=self.abrir_insights)
         menubar.add_cascade(label="Insights IA", menu=menu_ia)
 
-        # Aplica o menu
         self.config(menu=menubar)
 
-    # -------------------------
-    # FUNÇÕES DE ABERTURA DAS TELAS
-    # -------------------------
     def abrir_clientes(self):
         TelaClientes(self)
 
@@ -72,7 +58,7 @@ class App(tk.Tk):
         TelaProdutos(self)
 
     def abrir_vendas(self):
-        janela = TelaVendas(self)
+        TelaVendas(self)
 
     def abrir_relatorios(self):
         TelaRelatorios(self)
