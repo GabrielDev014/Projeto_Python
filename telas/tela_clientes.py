@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+import mysql.connector
 
 class TelaClientes(tk.Toplevel):
     def __init__(self, master=None):
@@ -49,9 +50,9 @@ class TelaClientes(tk.Toplevel):
         label_estado.place(x=313, y=260)
         opcoes = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
                 "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"]
-        self.combo = ttk.Combobox(self, values=opcoes, width=6, state="readonly")
-        self.combo.place(x=365, y=260)
-        self.combo.set("SP")
+        self.combo_estado = ttk.Combobox(self, values=opcoes, width=6, state = "readonly")
+        self.combo_estado.place(x=365, y=260)
+        self.combo_estado.set("SP")
 
         label_crud = tk.Label(self, text="Operação desejada:", font=("Segoe UI", 11, "bold"))
         label_crud.place(x=180, y=310)
@@ -75,6 +76,80 @@ class TelaClientes(tk.Toplevel):
 
         self.botao_fechar = tk.Button(self, text="Fechar", command=self.destroy, width=15)
         self.botao_fechar.place(x=270, y=400)
+
+    def adicionar_cliente(self):
+        conexao = mysql.connector.connect (
+            host="localhost",
+            user="root",
+            password="",
+            database="loja"
+        )
+        cursor = conexao.cursor()
+        sql = """INSERT INTO clientes 
+        (nome, email, telefone, endereco, cidade, estado) 
+        VALUES (%s, %s, %s, %s, %s, %s)"""
+        val = (
+            self.entrada_nome.get(),
+            self.entrada_email.get(),
+            self.entrada_telefone.get(),
+            self.entrada_endereco.get(),
+            self.entrada_cidade.get(),
+            self.combo_estado.get()
+        )
+        cursor.execute(sql, val)
+        conexao.commit()
+        conexao.close()
+        messagebox.showinfo("Sucesso", "Cliente adicionado com sucesso!")
+    
+    def deletar_cliente(self):
+        conexao = mysql.connector.connect (
+            host="localhost",
+            user="root",
+            password="",
+            database="loja"
+        )
+        cursor = conexao.cursor()
+        sql = '''DELETE FROM clientes WHERE id_cliente = %s'''
+        val = (self.entrada_id.get(),)
+        cursor.execute(sql, val)
+        conexao.commit()
+        conexao.close()
+        messagebox.showinfo("Sucesso", "Cliente deletado com sucesso!")
+    
+    def alterar_cliente(self):
+        conexao = mysql.connector.connect (
+            host="localhost",
+            user="root",
+            password="",
+            database="loja"
+        )
+        cursor = conexao.cursor()
+        sql = """UPDATE clientes SET 
+        (nome=%s, email=%s, telefone=%s, endereco=%s, cidade=%s, estado=%s)
+        WHERE id_cliente=%s"""
+        val = (
+            self.entrada_id.get(),
+            self.entrada_nome.get(),
+            self.entrada_email.get(),
+            self.entrada_telefone.get(),
+            self.entrada_endereco.get(),
+            self.entrada_cidade.get(),
+            self.combo_estado.get()
+        )
+        cursor.execute(sql, val)
+        conexao.commit()
+        conexao.close()
+        messagebox.showinfo("Sucesso", "Cliente atualizado com sucesso!")
+    
+    def pesquisar_cliente(self):
+        conexao = mysql.connector.connect (
+            host="localhost",
+            user="root",
+            password="",
+            database="loja"
+        )
+        cursor = conexao.cursor()
+        sql = """SELECT * FROM clientes WHERE id_cliente = %s"""
 
     def executar_operacao(self):
         operacao_selecionada = self.operacao.get()
