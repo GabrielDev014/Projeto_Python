@@ -55,7 +55,6 @@ class TelaVendas(tk.Toplevel):
         self.botao_adicionar = ttk.Button(self, text="Adicionar à Venda", command=self.adicionar_item)
         self.botao_adicionar.place(x=150, y=330)
         
-        # Lista de itens da venda
         label_itens_venda = tk.Label(self, text="Itens da Venda")
         label_itens_venda.place(x=10, y=370)
         self.tabela_itens = ttk.Treeview(self, columns=("Produto", "Qtd", "Unitário", "Subtotal"), show="headings")
