@@ -109,7 +109,7 @@ class TelaInsights(tk.Toplevel):
         Aqui estão os resultados da consulta que responde à pergunta:
         {self.prompt_entrada.get()}
 
-        {df_resultado.head(50).to_string(index=False)}
+        {df_resultado.head(30).to_string(index=False)}
 
         Gere insights e observações relevantes.
         """
