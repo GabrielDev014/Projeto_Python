@@ -7,8 +7,6 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import os
 import pandas as pd
-import openpyxl
-from openpyxl.utils import get_column_letter
 from conn.conexaoMySQL import conexao
 
 class TelaRelatorios(tk.Toplevel):
