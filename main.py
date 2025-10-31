@@ -1,7 +1,6 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 
-# Importa as telas (ainda serão criadas)
 from telas.tela_clientes import TelaClientes
 from telas.tela_produtos import TelaProdutos
 from telas.tela_vendas import TelaVendas
@@ -14,18 +13,15 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("Sistema de Vendas - Python + MySQL")
-        #self.geometry("800x600+200+50")
-        self.configure(bg="#f8f9fa")
+        self.title("Sistema de Gestão - PG Informática")
         self.state("zoomed")
 
         self._criar_menu_bar()
 
         self.label_bemvindo = ttk.Label(
             self,
-            text="Bem-vindo ao Sistema de Vendas",
-            font=("Segoe UI", 18, "bold"),
-            background="#f8f9fa",
+            text="Bem-vindo(a) ao Sistema da PG Informática!",
+            font=("Segoe UI", 18, "bold")
         )
         self.label_bemvindo.pack(expand=True)
 

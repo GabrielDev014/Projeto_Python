@@ -129,7 +129,7 @@ class TelaGraficos(tk.Toplevel):
         plt.ylim(0, max(quantidade) * 1.2)
 
         for i, v in enumerate(quantidade):
-            plt.text(i, v + max(quantidade) * 0.03, str(v), ha='center', va='bottom', fontsize=9, fontweight='bold', color='black')
+            plt.text(i, v + max(quantidade) * 0.03, str(v), ha='center', va='bottom', fontsize=9, color='black')
 
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
