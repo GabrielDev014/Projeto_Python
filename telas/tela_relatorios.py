@@ -1,11 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import os
+import pandas as pd
+import openpyxl
+from openpyxl.utils import get_column_letter
 from conn.conexaoMySQL import conexao
 
 class TelaRelatorios(tk.Toplevel):
@@ -90,8 +93,7 @@ class TelaRelatorios(tk.Toplevel):
             parent=estilos['Heading1'],
             alignment=1,
             fontSize=18,
-            spaceAfter=20,
-            textColor=colors.darkblue
+            spaceAfter=20
         )
         titulo = Paragraph("Relatório de Clientes", estilo_titulo)
         espacador = Spacer(1, 12)
@@ -102,13 +104,13 @@ class TelaRelatorios(tk.Toplevel):
         tabela = Table(dados_tabela)
 
         estilo = TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.grey),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0,0), (-1,0), 12),
-            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-            ('GRID', (0,0), (-1,-1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.beige]),
         ])
         tabela.setStyle(estilo)
 
@@ -141,8 +143,7 @@ class TelaRelatorios(tk.Toplevel):
             parent=estilos['Heading1'],
             alignment=1,
             fontSize=18,
-            spaceAfter=20,
-            textColor=colors.darkblue
+            spaceAfter=20
         )
         titulo = Paragraph("Relatório de Produtos", estilo_titulo)
         espacador = Spacer(1, 12)
@@ -153,13 +154,13 @@ class TelaRelatorios(tk.Toplevel):
         tabela = Table(dados_tabela)
 
         estilo = TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.grey),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0,0), (-1,0), 12),
-            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-            ('GRID', (0,0), (-1,-1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.beige]),
         ])
         tabela.setStyle(estilo)
 
@@ -169,22 +170,28 @@ class TelaRelatorios(tk.Toplevel):
         messagebox.showinfo("Sucesso", f"Relatório exportado como {nome_arquivo}", parent=self)
 
     def exportar_pedidos_pdf(self):
+
         conexao.conectar()
         cursor = conexao.cursor
 
         cursor.execute("""
-            SELECT p.id_pedido, c.nome, p.valor_total
+            SELECT 
+                p.id_pedido,
+                c.nome AS cliente,
+                pr.nome AS produto,
+                i.quantidade,
+                i.preco_unitario,
+                i.subtotal,
+                p.valor_total
             FROM pedidos p
             INNER JOIN clientes c ON p.id_cliente = c.id_cliente
-            ORDER BY p.id_pedido
+            INNER JOIN itens_pedido i ON p.id_pedido = i.id_pedido
+            INNER JOIN produtos pr ON i.id_produto = pr.id_produto
+            ORDER BY p.id_pedido;
         """)
         pedidos = cursor.fetchall()
+        conexao.desconectar()
 
-        if not pedidos:
-            messagebox.showinfo("Aviso", "Nenhum pedido encontrado.", parent=self)
-            conexao.desconectar()
-            return
-        
         pasta_relatorios = os.path.join(os.getcwd(), "relatorios")
         os.makedirs(pasta_relatorios, exist_ok=True)
         nome_arquivo = "relatorio_pedidos.pdf"
@@ -192,103 +199,163 @@ class TelaRelatorios(tk.Toplevel):
 
         pdf = SimpleDocTemplate(
             salvar_arquivo, 
-            pagesize=letter
+            pagesize=landscape(letter)
         )
-        
-        elementos = []
         estilos = getSampleStyleSheet()
+        elementos = []
 
-        estilo_titulo = ParagraphStyle(
-            'titulo',
-            parent=estilos['Heading1'],
-            alignment=1,
-            fontSize=18,
-            spaceAfter=20,
-            textColor=colors.darkblue
-        )
+        titulo = Paragraph("Relatório de Pedidos", estilos['Title'])
+        elementos.append(titulo)
+        elementos.append(Spacer(1, 12))
 
-        estilo_subtitulo = ParagraphStyle(
-            'subtitulo',
-            parent=estilos['Heading2'],
-            fontSize=13,
-            textColor=colors.darkred,
-            spaceAfter=8
-        )
+        estilo_tabela = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.beige]),
+        ])
 
-        estilo_produto = ParagraphStyle(
-            'produto',
-            fontSize=9,
-            leading=11,
-            alignment=0,
-        )
+        pedido_atual = None
+        dados_pedido = []
 
-        elementos.append(Paragraph("Relatório de Pedidos", estilo_titulo))
-        elementos.append(Spacer(1, 10))
+        for p in pedidos:
+            id_pedido, cliente, produto, quantidade, preco_unitario, subtotal, total_pedido = p
 
-        total_geral = 0
+            if pedido_atual is not None and id_pedido != pedido_atual:
+        
+                tabela = Table(dados_pedido, colWidths=[68, 100, 215, 70, 100, 80])
+                tabela.setStyle(estilo_tabela)
+                elementos.append(tabela)
 
-        for pedido in pedidos:
-            id_pedido, nome_cliente, valor_total = pedido
-            total_geral += float(valor_total)
+                elementos.append(Spacer(1, 5))
+                elementos.append(Paragraph(f"<b>Total do Pedido:</b> R$ {ultimo_total:.2f}", estilos['Normal']))
+                elementos.append(Spacer(1, 12))
 
-            cursor.execute("""
-                SELECT pr.nome, i.quantidade, i.preco_unitario, i.subtotal
-                FROM itens_pedido i
-                INNER JOIN produtos pr ON i.id_produto = pr.id_produto
-                WHERE i.id_pedido = %s
-            """, (id_pedido,))
-            itens = cursor.fetchall()
+                elementos.append(Paragraph("<br/>", estilos['Normal']))
 
-            elementos.append(Paragraph(f"<b>Pedido nº {id_pedido}</b>", estilo_subtitulo))
-            elementos.append(Paragraph(f"<b>Cliente:</b> {nome_cliente}", estilos['Normal']))
-            elementos.append(Spacer(1, 5))
+                dados_pedido = []
 
-            cabecalho = [("Produto", "Qtd", "Preço Unitário (R$)", "Subtotal (R$)")]
-            dados_tabela = cabecalho + [
-                (
-                    Paragraph(item[0], estilo_produto),
-                    str(item[1]),
-                    f"{item[2]:.2f}",
-                    f"{item[3]:.2f}"
-                )
-                for item in itens
-            ]
+            if id_pedido != pedido_atual:
 
-            tabela = Table(dados_tabela, colWidths=[250, 50, 100, 100])
-            estilo_tabela = TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-                ('TOPPADDING', (0, 0), (-1, -1), 3),
+                cabecalho = [
+                    ["ID Pedido", "Cliente", "Produto", "Quantidade", "Preço Unitário (R$)", "Subtotal (R$)"]
+                ]
+                dados_pedido = cabecalho
+
+            dados_pedido.append([
+                id_pedido,
+                cliente,
+                produto,
+                quantidade,
+                f"{preco_unitario:.2f}",
+                f"{subtotal:.2f}"
             ])
+
+            pedido_atual = id_pedido
+            ultimo_total = total_pedido
+
+        if dados_pedido:
+            tabela = Table(dados_pedido, colWidths=[68, 100, 215, 70, 100, 80])
             tabela.setStyle(estilo_tabela)
             elementos.append(tabela)
-
             elementos.append(Spacer(1, 5))
-            elementos.append(Paragraph(f"<b>Total do Pedido:</b> R$ {valor_total:.2f}", estilos['Normal']))
-            elementos.append(Spacer(1, 12))
-            elementos.append(Table([[" "]]))
-
-        conexao.desconectar()
-
-        elementos.append(Spacer(1, 12))
-        elementos.append(Paragraph(f"<b>Total Geral de Vendas:</b> R$ {total_geral:.2f}", estilos['Heading3']))
+            elementos.append(Paragraph(f"<b>Total do Pedido:</b> R$ {ultimo_total:.2f}", estilos['Normal']))
 
         pdf.build(elementos)
 
         messagebox.showinfo("Sucesso", f"Relatório exportado como: {nome_arquivo}", parent=self)
 
     def exportar_clientes_excel(self):
-        pass
+        try:
+            conexao.conectar()
+            cursor = conexao.cursor
+            cursor.execute("SELECT id_cliente, nome, email, cidade, estado FROM clientes")
+            dados = cursor.fetchall()
+            conexao.desconectar()
+
+            colunas = ["ID Cliente", "Nome", "E-mail", "Cidade", "Estado"]
+            df = pd.DataFrame(dados, columns = colunas)
+
+            pasta_relatorios = os.path.join(os.getcwd(), "relatorios")
+            os.makedirs(pasta_relatorios, exist_ok=True)
+            nome_arquivo = "relatorio_clientes.xlsx"
+            salvar_arquivo = os.path.join(pasta_relatorios, nome_arquivo)
+
+            df.to_excel(salvar_arquivo, index=False, engine='openpyxl')
+            messagebox.showinfo("Sucesso", f"Relatório exportado como {nome_arquivo}")
+
+        except Exception as e:
+            messagebox.showinfo("Erro", f"Erro ao exportar para Excel: {e}")
+
     def exportar_produtos_excel(self):
-        pass
+        try:
+            conexao.conectar()
+            cursor = conexao.cursor
+            cursor.execute("SELECT * FROM produtos")
+            dados = cursor.fetchall()
+            conexao.desconectar()
+
+            colunas = ["ID Produto", "Nome", "Preço"]
+            df = pd.DataFrame(dados, columns = colunas)
+
+            pasta_relatorios = os.path.join(os.getcwd(), "relatorios")
+            os.makedirs(pasta_relatorios, exist_ok=True)
+            nome_arquivo = "relatorio_produtos.xlsx"
+            salvar_arquivo = os.path.join(pasta_relatorios, nome_arquivo)
+
+            df.to_excel(salvar_arquivo, index=False, engine='openpyxl')
+            messagebox.showinfo("Sucesso", f"Relatório exportado como {nome_arquivo}")
+
+        except Exception as e:
+            messagebox.showinfo("Erro", f"Erro ao exportar para Excel: {e}")
+
     def exportar_pedidos_excel(self):
-        pass
+        try:
+            conexao.conectar()
+            cursor = conexao.cursor
+
+            sql = """
+            SELECT 
+                p.id_pedido AS 'ID Pedido',
+                c.nome AS 'Cliente',
+                pr.nome AS 'Produto',
+                i.quantidade AS 'Quantidade',
+                i.preco_unitario AS 'Preço Unitário',
+                i.subtotal AS 'Subtotal',
+                p.valor_total AS 'Total do Pedido'
+            FROM pedidos p
+            INNER JOIN clientes c ON p.id_cliente = c.id_cliente
+            INNER JOIN itens_pedido i ON p.id_pedido = i.id_pedido
+            INNER JOIN produtos pr ON i.id_produto = pr.id_produto
+            ORDER BY p.id_pedido;
+            """
+
+            cursor.execute(sql)
+            dados = cursor.fetchall()
+            conexao.desconectar()
+
+            colunas = [
+                "ID Pedido",
+                "Cliente",
+                "Produto",
+                "Quantidade",
+                "Preço Unitário",
+                "Subtotal",
+                "Total do Pedido"
+            ]
+            df = pd.DataFrame(dados, columns=colunas)
+
+            pasta_relatorios = os.path.join(os.getcwd(), "relatorios")
+            os.makedirs(pasta_relatorios, exist_ok=True)
+
+            nome_arquivo = "relatorio_pedidos.xlsx"
+            salvar_arquivo = os.path.join(pasta_relatorios, nome_arquivo)
+            df.to_excel(salvar_arquivo, index=False, engine='openpyxl')
+
+            messagebox.showinfo("Sucesso", f"Relatório exportado como {nome_arquivo}")
+
+        except Exception as e:
+            messagebox.showinfo("Erro", f"Erro ao exportar para Excel: {e}")
